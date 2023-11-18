@@ -1,17 +1,34 @@
+import torch
 from .build import BACKBONE_REGISTRY
 from lib.dinov2.vit import DinoVisionTransformer, vit_base, vit_large
+
+def find_all_linear_modules(model):
+    '''
+    COPIED FROM https://github. com/artidoro/glora/blob/main/qlora.py
+    QLoRA paper recommends "LoRA on all linear transformer block layers is required to match full finetuning performance."
+    '''
+    lora_module_names = set ()
+    for name, module in model.named_modules():
+        if isinstance(module, (torch.nn.Linear)):
+            names = name.split(".")
+            lora_module_names.add(names[0] if len(names) == 1 else names[-1])
+
+            if "lm_head" in lora_module_names: # needed for 16-bit
+                lora_module_names.remove("lm_head")
+    return list(lora_module_names)
 
 
 @BACKBONE_REGISTRY.register()
 def build_dino_v2_vit(cfg, input_shape):
     out_indices = cfg.DE.OUT_INDICES
+    add_lora = cfg.get('add_lora', False)
 
     if out_indices is not None:
         if isinstance(out_indices, str):
             out_indices = [int(m) for m in out_indices.split(",")]
     
     if cfg.MODEL.BACKBONE.TYPE == 'small':
-        return DinoVisionTransformer(
+        model = DinoVisionTransformer(
         patch_size=14,
         img_size=518,
         init_values=1,
@@ -20,10 +37,27 @@ def build_dino_v2_vit(cfg, input_shape):
         num_heads=6,
         mlp_ratio=4,
         out_indices=out_indices,
+        add_lora=add_lora,
     )
     elif cfg.MODEL.BACKBONE.TYPE == 'base':
-        return vit_base(out_indices=out_indices)
+        model = vit_base(out_indices=out_indices, add_lora=add_lora)
     elif cfg.MODEL.BACKBONE.TYPE == "large":
-        return vit_large(img_size=518, patch_size=14, init_values=1, out_indices=out_indices)
+        model = vit_large(img_size=518, patch_size=14, init_values=1, out_indices=out_indices, add_lora=add_lora)
     else:
         raise NotImplementedError()
+    
+    if add_lora is True:
+        from peft import inject_adapter_in_model, LoraConfig
+
+        lora_config = LoraConfig(
+            lora_alpha=16,
+            lora_dropout=0.1,
+            r=64,
+            bias="none",
+            target_modules=find_all_linear_modules(model),
+        )
+
+
+        model = inject_adapter_in_model(lora_config, model)
+
+    return model
