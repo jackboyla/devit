@@ -29,9 +29,21 @@ from .coco_panoptic import register_coco_panoptic, register_coco_panoptic_separa
 from .lvis import get_lvis_instances_meta, register_lvis_instances
 from .pascal_voc import register_pascal_voc
 
-# ==== Predefined datasets and splits for COCO ==========
+# ==== Predefined datasets and splits for Mini COCO ==========
 
 _PREDEFINED_SPLITS_COCO = {}
+
+_PREDEFINED_SPLITS_COCO["minicoco_ovd"] = {
+    "minicoco_2017_ovd_all_train": ("coco_minitrain_25k/images/train2017", "coco_minitrain_25k/annotations/ovd_ins_train2017_all.json"),
+    "minicoco_2017_ovd_b_train": ("coco_minitrain_25k/images/train2017", "coco_minitrain_25k/annotations/ovd_ins_train2017_b.json"),
+    "minicoco_2017_ovd_t_train": ("coco_minitrain_25k/images/train2017", "coco_minitrain_25k/annotations/ovd_ins_train2017_t.json"),
+    "minicoco_2017_ovd_all_test": ("coco_minitrain_25k/images/val2017", "coco_minitrain_25k/annotations/ovd_ins_val2017_all.json"),
+    "minicoco_2017_ovd_b_test": ("coco_minitrain_25k/images/val2017", "coco_minitrain_25k/annotations/ovd_ins_val2017_b.json"),
+    "minicoco_2017_ovd_t_test": ("coco_minitrain_25k/images/val2017", "coco_minitrain_25k/annotations/ovd_ins_val2017_t.json"),
+}
+
+# ==== Predefined datasets and splits for COCO ==========
+
 _PREDEFINED_SPLITS_COCO["coco"] = {
     "coco_2014_train": ("coco/train2014", "coco/annotations/instances_train2014.json"),
     "coco_2014_val": ("coco/val2014", "coco/annotations/instances_val2014.json"),
@@ -137,7 +149,7 @@ _PREDEFINED_SPLITS_COCO_PANOPTIC = {
 
 def register_all_coco(root):
     for dataset_name, splits_per_dataset in _PREDEFINED_SPLITS_COCO.items():
-        if dataset_name == 'coco_ovd':  # for zero-shot split
+        if dataset_name == 'coco_ovd' or dataset_name ==  'minicoco_ovd': # CHANGED to accommodate mini coco
             for key, (image_root, json_file) in splits_per_dataset.items():
                 # Assume pre-defined datasets live in `./datasets`.
                 register_coco_instances(

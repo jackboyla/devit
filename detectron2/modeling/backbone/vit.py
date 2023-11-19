@@ -37,12 +37,11 @@ def build_dino_v2_vit(cfg, input_shape):
         num_heads=6,
         mlp_ratio=4,
         out_indices=out_indices,
-        add_lora=add_lora,
     )
     elif cfg.MODEL.BACKBONE.TYPE == 'base':
-        model = vit_base(out_indices=out_indices, add_lora=add_lora)
+        model = vit_base(out_indices=out_indices)
     elif cfg.MODEL.BACKBONE.TYPE == "large":
-        model = vit_large(img_size=518, patch_size=14, init_values=1, out_indices=out_indices, add_lora=add_lora)
+        model = vit_large(img_size=518, patch_size=14, init_values=1, out_indices=out_indices)
     else:
         raise NotImplementedError()
     
