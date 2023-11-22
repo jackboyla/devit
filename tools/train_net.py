@@ -55,6 +55,7 @@ from collections import defaultdict
 
 import numpy as np
 
+from detectron2.modeling import build_model
 from detectron2.evaluation.evaluator import DatasetEvaluator
 from detectron2.data.datasets.coco_zeroshot_categories import COCO_SEEN_CLS, \
     COCO_UNSEEN_CLS, COCO_OVD_ALL_CLS
