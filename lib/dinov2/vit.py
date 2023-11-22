@@ -68,7 +68,8 @@ class DinoVisionTransformer(Backbone):
         block_chunks=0,
 
         out_indices=None, 
-        is_mask_train=False
+        is_mask_train=False,
+        add_lora=False,
     ):
         """
         Args:
@@ -189,14 +190,25 @@ class DinoVisionTransformer(Backbone):
         self.pos_embed.requires_grad = False
         self.mask_token.requires_grad = False
 
-        for p in self.patch_embed.parameters():
-            p.requires_grad = False
-        self.patch_embed.eval()
+        # for p in self.patch_embed.parameters():
+        #     p.requires_grad = False
+        # self.patch_embed.eval()
+        for name, param in self.patch_embed.named_parameters():
+            if 'lora' in name:
+                param.requires_grad=True
+            else:
+                param.requires_grad = False
 
         for i in range(9):
-            for p in self.blocks[i].parameters():
-                p.requires_grad = False
-            self.blocks[i].eval() 
+            # for p in self.blocks[i].parameters():
+            #     p.requires_grad = False
+            # self.blocks[i].eval() 
+
+            for name, param in self.blocks[i].named_parameters():
+                if 'lora' in name:
+                    param.requires_grad=True
+                else:
+                    param.requires_grad = False
         
         # for p in self.norm.parameters():
         #     p.requires_grad = False
@@ -205,10 +217,20 @@ class DinoVisionTransformer(Backbone):
     def enforce_partial_freeze_if_needed(self):
         if self._partial_freeze:
             if self.patch_embed.training: 
-                self.patch_embed.eval()
+                # self.patch_embed.eval()
+                for name, param in self.patch_embed.named_parameters():
+                    if 'lora' in name:
+                        param.requires_grad=True
+                    else:
+                        param.requires_grad = False
             for i in range(9):
                 if self.blocks[i].training:
-                    self.blocks[i].eval()
+                    # self.blocks[i].eval()
+                    for name, param in self.blocks[i].named_parameters():
+                        if 'lora' in name:
+                            param.requires_grad=True
+                        else:
+                            param.requires_grad = False
             
             # if self.norm.training:
             #     self.norm.eval()
