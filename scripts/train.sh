@@ -13,7 +13,7 @@ case $task in
     if [[ "$dataset" == "coco" ]]
     then
         python3 tools/train_net.py    --num-gpus $num_gpus  \
-            --config-file configs/open-vocabulary/coco/vit${vit}.yaml \
+            --config-file configs/open-vocabulary/minicoco/vit${vit}.yaml \
             MODEL.WEIGHTS  weights/initial/open-vocabulary/vit${vit}+rpn.pth \
             DE.OFFLINE_RPN_CONFIG configs/RPN/mask_rcnn_R_50_C4_1x_ovd_FSD.yaml \
             OUTPUT_DIR output/train/open-vocabulary/coco/vit${vit}/ $@
