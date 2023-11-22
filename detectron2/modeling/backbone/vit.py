@@ -1,6 +1,9 @@
 import torch
+import logging
 from .build import BACKBONE_REGISTRY
 from lib.dinov2.vit import DinoVisionTransformer, vit_base, vit_large
+
+logger = logging.getLogger("detectron2.backbone")
 
 def find_all_linear_modules(model):
     '''
@@ -49,15 +52,19 @@ def build_dino_v2_vit(cfg, input_shape):
     if add_lora is True:
         from peft import inject_adapter_in_model, LoraConfig
 
+        linear_layers = find_all_linear_modules(model)
         lora_config = LoraConfig(
             lora_alpha=16,
             lora_dropout=0.1,
             r=64,
             bias="none",
-            target_modules=find_all_linear_modules(model),
+            target_modules=linear_layers,
         )
 
 
-        model = inject_adapter_in_model(lora_config, model)
+        model = inject_adapter_in_model(lora_config, model, adapter_name='lora')
+
+        logger.info(f"Added LoRA adapters to {linear_layers}")
+
 
     return model
