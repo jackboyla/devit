@@ -151,6 +151,26 @@ class Trainer(DefaultTrainer):
         res = cls.test(cfg, model, evaluators)
         res = OrderedDict({k + "_TTA": v for k, v in res.items()})
         return res
+    
+    
+    @classmethod
+    def build_model(cls, cfg):
+        """
+        Returns:
+            torch.nn.Module:
+
+        It now calls :func:`detectron2.modeling.build_model`.
+        Overwrite it if you'd like a different model.
+        """
+        model = build_model(cfg)
+        logger = logging.getLogger(__name__)
+
+        # unfreeze ALL LoRA parameters
+        for name, param in model.named_parameters():
+            if 'lora' in name:
+                param.requires_grad = True
+                
+        return model
 
 
 def setup(args):
@@ -169,6 +189,7 @@ def setup(args):
 
 def main(args):
     cfg = setup(args)
+    print("CONFIG HERE:", list(cfg.keys()), '\n\n\n', list(cfg.values()))
 
     if args.eval_only:
         model = Trainer.build_model(cfg)
