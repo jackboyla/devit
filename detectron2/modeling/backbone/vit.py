@@ -24,7 +24,7 @@ def find_all_linear_modules(model):
 @BACKBONE_REGISTRY.register()
 def build_dino_v2_vit(cfg, input_shape):
     out_indices = cfg.DE.OUT_INDICES
-    add_lora = cfg.get('add_lora', False)
+    add_lora = cfg.get('MODEL.ADD_LORA', False)
 
     if out_indices is not None:
         if isinstance(out_indices, str):
@@ -40,12 +40,11 @@ def build_dino_v2_vit(cfg, input_shape):
         num_heads=6,
         mlp_ratio=4,
         out_indices=out_indices,
-        add_lora=add_lora,
     )
     elif cfg.MODEL.BACKBONE.TYPE == 'base':
-        model = vit_base(out_indices=out_indices, add_lora=add_lora)
+        model = vit_base(out_indices=out_indices)
     elif cfg.MODEL.BACKBONE.TYPE == "large":
-        model = vit_large(img_size=518, patch_size=14, init_values=1, out_indices=out_indices, add_lora=add_lora)
+        model = vit_large(img_size=518, patch_size=14, init_values=1, out_indices=out_indices)
     else:
         raise NotImplementedError()
     

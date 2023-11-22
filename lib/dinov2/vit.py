@@ -69,7 +69,6 @@ class DinoVisionTransformer(Backbone):
 
         out_indices=None, 
         is_mask_train=False,
-        add_lora=False,
     ):
         """
         Args:
