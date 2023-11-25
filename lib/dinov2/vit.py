@@ -329,14 +329,14 @@ class DinoVisionTransformer(Backbone):
         output, total_block_len = [], len(self.blocks)
         blocks_to_take = range(total_block_len - n, total_block_len) if isinstance(n, int) else n
         if self._partial_freeze:
-            with torch.no_grad(): # freeze part
-                with autocast():
-                    x = self.prepare_tokens_with_masks(x)                   
-                    for i in range(9):
-                        blk = self.blocks[i]    
-                        x = blk(x)
-                        if i in blocks_to_take:
-                            output.append(x)
+            # with torch.no_grad(): # freeze part
+            with autocast():
+                x = self.prepare_tokens_with_masks(x)                   
+                for i in range(9):
+                    blk = self.blocks[i]    
+                    x = blk(x)
+                    if i in blocks_to_take:
+                        output.append(x)
                 
             for i in range(9, total_block_len):
                 blk = self.blocks[i]

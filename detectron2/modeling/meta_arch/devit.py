@@ -997,13 +997,12 @@ class OpenSetDetectorWithExamples(nn.Module):
             proposals, _ = self.offline_proposal_generator(images, features, None)     
             images = self.preprocess_image(batched_inputs)
         
-        with torch.no_grad():
-            if self.backbone.training: self.backbone.eval()
-            with autocast(enabled=True):
-                all_patch_tokens = self.backbone(images.tensor)
-                patch_tokens = all_patch_tokens[self.vit_feat_name]
-                all_patch_tokens.pop(self.vit_feat_name)
-                # patch_tokens = self.backbone(images.tensor)['res11'] 
+        # with torch.no_grad():
+        with autocast(enabled=True):
+            all_patch_tokens = self.backbone(images.tensor)
+            patch_tokens = all_patch_tokens[self.vit_feat_name]
+            all_patch_tokens.pop(self.vit_feat_name)
+            # patch_tokens = self.backbone(images.tensor)['res11'] 
 
         if self.training or self.use_one_shot: 
             with torch.no_grad():
