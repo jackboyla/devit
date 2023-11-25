@@ -47,13 +47,30 @@ _PREDEFINED_SPLITS_COCO["coco"] = {
     "coco_2017_test-dev": ("coco/test2017", "coco/annotations/image_info_test-dev2017.json"),
     "coco_2017_val_100": ("coco/val2017", "coco/annotations/instances_val2017_100.json"),
 }
+
+# _PREDEFINED_SPLITS_COCO["minicoco_ovd"] = {
+#     "minicoco_2017_ovd_all_train": ("coco_minitrain_25k/images/train2017", "coco_minitrain_25k/annotations/ovd_ins_train2017_all.json"),
+#     "minicoco_2017_ovd_b_train": ("coco_minitrain_25k/images/train2017", "coco_minitrain_25k/annotations/ovd_ins_train2017_b.json"),
+#     "minicoco_2017_ovd_t_train": ("coco_minitrain_25k/images/train2017", "coco_minitrain_25k/annotations/ovd_ins_train2017_t.json"),
+#     "minicoco_2017_ovd_all_test": ("coco_minitrain_25k/images/val2017", "coco_minitrain_25k/annotations/ovd_ins_val2017_all.json"),
+#     "minicoco_2017_ovd_b_test": ("coco_minitrain_25k/images/val2017", "coco_minitrain_25k/annotations/ovd_ins_val2017_b.json"),
+#     "minicoco_2017_ovd_t_test": ("coco_minitrain_25k/images/val2017", "coco_minitrain_25k/annotations/ovd_ins_val2017_t.json"),
+# }
 _PREDEFINED_SPLITS_COCO["coco_ovd"] = {
-    "coco_2017_ovd_all_train": ("coco/train2017", "coco/annotations/ovd_ins_train2017_all.json"),
-    "coco_2017_ovd_b_train": ("coco/train2017", "coco/annotations/ovd_ins_train2017_b.json"),
-    "coco_2017_ovd_t_train": ("coco/train2017", "coco/annotations/ovd_ins_train2017_t.json"),
-    "coco_2017_ovd_all_test": ("coco/val2017", "coco/annotations/ovd_ins_val2017_all.json"),
-    "coco_2017_ovd_b_test": ("coco/val2017", "coco/annotations/ovd_ins_val2017_b.json"),
-    "coco_2017_ovd_t_test": ("coco/val2017", "coco/annotations/ovd_ins_val2017_t.json"),
+    # "coco_2017_ovd_all_train": ("coco/train2017", "coco/annotations/ovd_ins_train2017_all.json"),
+    # "coco_2017_ovd_b_train": ("coco/train2017", "coco/annotations/ovd_ins_train2017_b.json"),
+    # "coco_2017_ovd_t_train": ("coco/train2017", "coco/annotations/ovd_ins_train2017_t.json"),
+    # "coco_2017_ovd_all_test": ("coco/val2017", "coco/annotations/ovd_ins_val2017_all.json"),
+    # "coco_2017_ovd_b_test": ("coco/val2017", "coco/annotations/ovd_ins_val2017_b.json"),
+    # "coco_2017_ovd_t_test": ("coco/val2017", "coco/annotations/ovd_ins_val2017_t.json"),
+
+    # REPLACE ALL COCO DATA SPLITS WITH MINI COCO DATA
+    "coco_2017_ovd_all_train": ("coco_minitrain_25k/images/train2017", "coco_minitrain_25k/annotations/ovd_ins_train2017_all.json"),
+    "coco_2017_ovd_b_train": ("coco_minitrain_25k/images/train2017", "coco_minitrain_25k/annotations/ovd_ins_train2017_b.json"),
+    "coco_2017_ovd_t_train": ("coco_minitrain_25k/images/train2017", "coco_minitrain_25k/annotations/ovd_ins_train2017_t.json"),
+    "coco_2017_ovd_all_test": ("coco_minitrain_25k/images/val2017", "coco_minitrain_25k/annotations/ovd_ins_val2017_all.json"),
+    "coco_2017_ovd_b_test": ("coco_minitrain_25k/images/val2017", "coco_minitrain_25k/annotations/ovd_ins_val2017_b.json"),
+    "coco_2017_ovd_t_test": ("coco_minitrain_25k/images/val2017", "coco_minitrain_25k/annotations/ovd_ins_val2017_t.json"),
 
     
     "fs_coco17_base_train": ("coco/train2017", "coco/annotations/fs_coco17_base_train.json"),
@@ -137,7 +154,7 @@ _PREDEFINED_SPLITS_COCO_PANOPTIC = {
 
 def register_all_coco(root):
     for dataset_name, splits_per_dataset in _PREDEFINED_SPLITS_COCO.items():
-        if dataset_name == 'coco_ovd':  # for zero-shot split
+        if dataset_name == 'coco_ovd' or dataset_name ==  'minicoco_ovd':  # for zero-shot split
             for key, (image_root, json_file) in splits_per_dataset.items():
                 # Assume pre-defined datasets live in `./datasets`.
                 register_coco_instances(
