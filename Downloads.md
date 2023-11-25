@@ -17,6 +17,15 @@ rm -rf release
 > If `gdown` shows error like `Access denied with the following error: Cannot retrieve the public link of the file. You may need to change the permission to "Anyone with the link", or have had many accesses`, please try use `rclone` with more instructions from [issue#7](https://github.com/mlzxy/devit/issues/7). 
 
 
+## MiniCOCO data prep
+
+```
+cd path/to/coco_minitrain_25k.zip
+jar xf coco_minitrain_25k.zip
+# move contents to /devit/datasets/minicoco/
+
+```
+
 ## Datasets Preparation (folder `datasets`)
 
 ```bash
