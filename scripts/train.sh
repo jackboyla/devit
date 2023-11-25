@@ -7,16 +7,33 @@ num_gpus="${num_gpus:-`nvidia-smi -L | wc -l`}"
 
 echo "task=$task, vit=$vit, dataset=$dataset, shot=$shot, split=$split, num_gpus=$num_gpus"
 
+# Define the timestamp format (e.g., HH-MM-SS--YYYY-MM-DD)
+timestamp=$(date +"%Hh-%Mm-%Ss--%Y-%m-%d")
+
+lora=""
+
+# Loop through all arguments
+for arg in "$@"
+do
+    # Check if the argument is --lora
+    if [ "$arg" == "--lora" ]; then
+        lora="_lora"
+        echo "LoRA enabled!"
+        break
+    fi
+done
+
+# MODEL.WEIGHTS  weights/initial/open-vocabulary/vit${vit}+rpn.pth \
+
 case $task in
 
     ovd)
     if [[ "$dataset" == "coco" ]]
     then
         python3 tools/train_net.py    --num-gpus $num_gpus  \
-            --config-file configs/open-vocabulary/minicoco/vit${vit}.yaml \
-            MODEL.WEIGHTS  weights/initial/open-vocabulary/vit${vit}+rpn.pth \
+            --config-file configs/open-vocabulary/minicoco/vit${vit}${lora}.yaml \
             DE.OFFLINE_RPN_CONFIG configs/RPN/mask_rcnn_R_50_C4_1x_ovd_FSD.yaml \
-            OUTPUT_DIR output/train/open-vocabulary/coco/vit${vit}/ $@
+            OUTPUT_DIR output/train/open-vocabulary/minicoco/vit${vit}${lora}/$timestamp
     else
         python3 tools/train_net.py    --num-gpus $num_gpus  --eval-only \
             --config-file  configs/open-vocabulary/lvis/vit${vit}.yaml \
