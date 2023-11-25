@@ -1,15 +1,22 @@
 #!/bin/bash
-#SBATCH --job-name=jack_job
-#SBATCH --ntasks=4
-#SBATCH --gres=gpu:2 -C A100-40GB
+#SBATCH --job-name=devit_training
+#SBATCH --ntasks=8
+#SBATCH --gres=gpu:1 -C V100-32GB
 #SBATCH --mail-type=BEGIN,END,FAIL       # Mail events (NONE, BEGIN, END, FAIL, ALL)
-#SBATCH --mail-user=<you-email-here>  # Where to send mail
+#SBATCH --mail-user=<your-email>  # Where to send mail
 #SBATCH -t480 # walltime minutes
-#SBATCH -o/<output.log>
+#SBATCH -o/devit/train.log
 
+cd /devit/
+
+source /home/miniconda3/etc/profile.d/conda.sh
 conda activate devit2
 
-# Your job command goes here
-srun vit=l task=ovd dataset=coco bash train.sh
+export vit=s
+export task=ovd
+export dataset=coco
 
-# run this job using: $SLURM_SUBMIT_DIR=<path-to-this-file> sbatch train_job.sbatch
+# Your job command goes here
+srun bash scripts/train.sh --lora
+
+# run this job using: SLURM_SUBMIT_DIR=/devit/scripts sbatch train_job.sbatch
