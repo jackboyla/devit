@@ -1170,7 +1170,8 @@ class OpenSetDetectorWithExamples(nn.Module):
             other_classes = self.fc_other_class(other_classes) # (Nxclasses) x spatial x emb
             other_classes = other_classes.permute(0, 2, 1) # (Nxclasses) x emb x spatial
             # (Nxclasses) x emb x S x S
-            logger.info(f"DEBUGGING: (bs * num_active_classes, -1, self.roialign_size, self.roialign_size) \n ({bs} * {num_active_classes}, -1, {self.roialign_size}, {self.roialign_size})")
+            if bs < 1:
+                logger.info(f"DEBUGGING: (bs * num_active_classes, -1, self.roialign_size, self.roialign_size) \n ({bs} * {num_active_classes}, -1, {self.roialign_size}, {self.roialign_size})")
             inter_dist_emb = other_classes.reshape(bs * num_active_classes, -1, self.roialign_size, self.roialign_size)
 
             intra_feats = torch.gather(feats, 2, class_indices[:, None, :].repeat(1, spatial_size, 1)) if sample_class_enabled else feats
