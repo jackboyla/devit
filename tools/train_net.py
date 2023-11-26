@@ -216,7 +216,7 @@ def main(args):
         backbone_trainable_params = [name for name, param in trainer.model.backbone.named_parameters() if param.requires_grad==True]
     else:
         backbone_trainable_params = [name for name, param in trainer.model.module.backbone.named_parameters() if param.requires_grad==True]
-    print(f"Number of trainable BACKBONE params: \n{len(backbone_trainable_params)}")
+    logger.info(f"Number of trainable BACKBONE params: \n{len(backbone_trainable_params)}")
 
     return trainer.train()
 

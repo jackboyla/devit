@@ -3,7 +3,7 @@ DE:
   CLASS_PROTOTYPES: "weights/initial/open-vocabulary/prototypes/minicoco/coco_2017_ovd_all_train.vits14.bbox.p10.sk.pkl"
   BG_PROTOTYPES: "weights/initial/background/background_prototypes.vits14.pth"
   BG_CLS_LOSS_WEIGHT: 0.2
-  TOPK: 10
+  TOPK: 3
 
 MODEL:
   META_ARCHITECTURE: "OpenSetDetectorWithExamples"
@@ -30,7 +30,7 @@ DATASETS:
   TRAIN: ("coco_2017_ovd_b_train",)
   TEST: ("coco_2017_ovd_all_test",)
 TEST:
-  EVAL_PERIOD: 5000
+  EVAL_PERIOD: 30
 SOLVER:
   IMS_PER_BATCH: 16
   BASE_LR: 0.002
