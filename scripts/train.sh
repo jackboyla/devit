@@ -8,10 +8,9 @@ num_gpus="${num_gpus:-`nvidia-smi -L | wc -l`}"
 echo "task=$task, vit=$vit, dataset=$dataset, shot=$shot, split=$split, num_gpus=$num_gpus"
 
 # Define the timestamp format (e.g., HH-MM-SS--YYYY-MM-DD)
-timestamp=$(date +"%Hh-%Mm-%Ss--%Y-%m-%d")
+timestamp=$(date +%Y-%m-%d--%H-%M-%S)
 
 lora=""
-
 # Loop through all arguments
 for arg in "$@"
 do
@@ -23,7 +22,6 @@ do
     fi
 done
 
-# MODEL.WEIGHTS  weights/initial/open-vocabulary/vit${vit}+rpn.pth \
 
 case $task in
 
@@ -32,6 +30,7 @@ case $task in
     then
         python3 tools/train_net.py    --num-gpus $num_gpus  \
             --config-file configs/open-vocabulary/minicoco/vit${vit}${lora}.yaml \
+            MODEL.WEIGHTS  weights/initial/open-vocabulary/vit${vit}+rpn.pth \
             DE.OFFLINE_RPN_CONFIG configs/RPN/mask_rcnn_R_50_C4_1x_ovd_FSD.yaml \
             OUTPUT_DIR output/train/open-vocabulary/minicoco/vit${vit}${lora}/$timestamp
     else
