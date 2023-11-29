@@ -3,10 +3,13 @@ DE:
   CLASS_PROTOTYPES: "weights/initial/open-vocabulary/prototypes/minicoco/coco_2017_ovd_all_train.vits14.bbox.p10.sk.pkl"
   BG_PROTOTYPES: "weights/initial/background/background_prototypes.vits14.pth"
   BG_CLS_LOSS_WEIGHT: 0.2
-  TOPK: 3 # was 10
+  TOPK: 10 # was 10
 
 MODEL:
   ADD_LORA: True
+  LORA_ALPHA: 8
+  LORA_RANK: 16
+  LORA_DROPOUT: 0.05
   META_ARCHITECTURE: "OpenSetDetectorWithExamples"
   BACKBONE:
     NAME: "build_dino_v2_vit"
@@ -31,14 +34,15 @@ DATASETS:
   TRAIN: ("coco_2017_ovd_b_train",)
   TEST: ("coco_2017_ovd_all_test",)
 TEST:
-  EVAL_PERIOD: 50 # was 5000
+  EVAL_PERIOD: 4000 # was 5000
 SOLVER:
-  IMS_PER_BATCH: 8
-  BASE_LR: 0.002
-  STEPS: (4000, 6000) # was (60000, 80000)
-  MAX_ITER: 8000   # was 90_000 (25K images ≈ 20% of train2017) 
-  WARMUP_ITERS: 500 # was 50000
-  CHECKPOINT_PERIOD: 500 # was 5000
+  IMS_PER_EVAL_BATCH: 32
+  IMS_PER_BATCH: 32
+  BASE_LR: 0.002 # was 0.002
+  STEPS: (5000, 7500) # was (60000, 80000)
+  MAX_ITER: 10001   # was 90_000 (25K images ≈ 20% of train2017) 
+  WARMUP_ITERS: 2000 # was 50000
+  CHECKPOINT_PERIOD: 5000 # was 5000
 
 INPUT:
   MIN_SIZE_TRAIN_SAMPLING: choice

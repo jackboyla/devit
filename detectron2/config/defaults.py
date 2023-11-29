@@ -30,6 +30,9 @@ _C.MODEL.META_ARCHITECTURE = "GeneralizedRCNN"
 
 # LoRA
 _C.MODEL.ADD_LORA = False
+_C.MODEL.LORA_ALPHA = 8
+_C.MODEL.LORA_RANK = 16
+_C.MODEL.LORA_DROPOUT = 0.1
 
 # Path (a file path, or URL like detectron2://.., https://..) to a checkpoint file
 # to be loaded to the model. You can find available models in the model zoo.
@@ -617,6 +620,7 @@ _C.SOLVER.CHECKPOINT_PERIOD = 5000
 # and IMS_PER_BATCH = 32, each GPU will see 2 images per batch.
 # May be adjusted automatically if REFERENCE_WORLD_SIZE is set.
 _C.SOLVER.IMS_PER_BATCH = 16
+_C.SOLVER.IMS_PER_EVAL_BATCH = 16
 
 # The reference number of workers (GPUs) this config is meant to train with.
 # It takes no effect when set to 0.
