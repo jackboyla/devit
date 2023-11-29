@@ -7,6 +7,8 @@ num_gpus="${num_gpus:-`nvidia-smi -L | wc -l`}"
 
 echo "task=$task, vit=$vit, dataset=$dataset, shot=$shot, split=$split, num_gpus=$num_gpus"
 
+export WANDB_API_KEY="YOU-KEY-HERE"
+
 # Define the timestamp format (e.g., HH-MM-SS--YYYY-MM-DD)
 timestamp=$(date +%Y-%m-%d--%H-%M-%S)
 
