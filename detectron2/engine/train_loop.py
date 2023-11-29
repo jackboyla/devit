@@ -352,6 +352,7 @@ class SimpleTrainer(TrainerBase):
 
             # Log metrics to wandb
             wandb_metrics = {f"{prefix}{k}": v for k, v in metrics_dict.items()}
+            wandb_metrics["total_loss"] = total_losses_reduced
             wandb.log(wandb_metrics)
 
     def state_dict(self):
