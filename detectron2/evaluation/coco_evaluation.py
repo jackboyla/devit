@@ -7,6 +7,7 @@ import itertools
 import json
 import logging
 import numpy as np
+import wandb
 import os
 import pickle
 from collections import OrderedDict
@@ -381,12 +382,18 @@ class COCOEvaluator(DatasetEvaluator):
                         mean_s = np.mean(s_split[s_split>-1])
                     res[split][int(iouThr * 100)] = mean_s
 
+            wandb_metrics = {}
             for iouThr in [0.5, 0.75]:
                 for split in ['target', 'base', 'all']:
                     self._logger.info("{} AP{}: {}".format(split, int(iouThr * 100), res[split][int(iouThr * 100)]))
+                    wandb_metrics[f"val_{split}_AP{int(iouThr * 100)}"] = res[split][int(iouThr * 100)]
             
             for k, v in res.items():
                 self._logger.info("{} mAP: {}".format(k, np.mean(list(v.values()))))
+                wandb_metrics[f"val_{k}_mAP"] = np.mean(list(v.values()))
+
+            # Log metrics to wandb
+            wandb.log(wandb_metrics)
 
         # tabulate it
         N_COLS = min(6, len(results_per_category) * 2)
