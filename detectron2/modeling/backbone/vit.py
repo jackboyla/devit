@@ -52,9 +52,9 @@ def build_dino_v2_vit(cfg, input_shape):
 
         linear_layers = find_all_linear_modules(model)
         lora_config = LoraConfig(
-            lora_alpha=16,
-            lora_dropout=0.1,
-            r=64,
+            lora_alpha=cfg.MODEL.LORA_ALPHA,
+            lora_dropout=cfg.MODEL.LORA_DROPOUT,
+            r=cfg.MODEL.LORA_RANK,
             bias="none",
             target_modules=linear_layers,
         )
@@ -62,7 +62,7 @@ def build_dino_v2_vit(cfg, input_shape):
         model = inject_adapter_in_model(lora_config, model, adapter_name='lora')
 
         logger.info(f"Added LoRA adapters to {linear_layers}")
-        print(f"Added LoRA adapters to {linear_layers}")
+        logger.info(f"LoRA config: {lora_config}")
 
 
     return model
