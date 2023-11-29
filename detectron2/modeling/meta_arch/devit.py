@@ -967,7 +967,7 @@ class OpenSetDetectorWithExamples(nn.Module):
     def forward(self, batched_inputs: List[Dict[str, torch.Tensor]]):
         bs = len(batched_inputs)
         loss_dict = {}
-        if not self.training: assert bs == 1
+        # if not self.training: assert bs == 1
 
         if self.training:
             class_weights = self.train_class_weight
@@ -1001,8 +1001,11 @@ class OpenSetDetectorWithExamples(nn.Module):
         
         # with torch.no_grad():
         with autocast(enabled=True):
+            # logger.info(f"images.tensor --> {images.tensor.shape}")
             all_patch_tokens = self.backbone(images.tensor)
+            # logger.info(f"all_patch_tokens --> {v.shape for k, v in all_patch_tokens.items()}")
             patch_tokens = all_patch_tokens[self.vit_feat_name]
+            # logger.info(f"patch_tokens --> {patch_tokens.shape}")
             all_patch_tokens.pop(self.vit_feat_name)
             # patch_tokens = self.backbone(images.tensor)['res11'] 
 
@@ -1097,10 +1100,15 @@ class OpenSetDetectorWithExamples(nn.Module):
                     batch_index = torch.full((len(box), 1), fill_value=float(bid)).to(self.device) 
                     rois.append(torch.cat([batch_index, box], dim=1))
                 rois = torch.cat(rois)
+                # logger.info(f"rois (NON-EVAL) --> {rois.shape}")
         else:
             boxes = proposals[0].proposal_boxes.tensor 
             rois = torch.cat([torch.full((len(boxes), 1), fill_value=0).to(self.device) , 
                             boxes], dim=1)
+            # if rois.shape[0] < 1:
+                # logger,warn(f"ROIS has returned zero proposal boxes")
+                # logger.info(f"proposals[0].proposal_boxes --> {proposals[0].proposal_boxes.tensor.shape} ")
+                # logger.info(f"rois --> {rois.shape}")
 
         roi_features = self.roi_align(patch_tokens, rois) # N, C, k, k
         roi_bs = len(roi_features)
@@ -1172,6 +1180,7 @@ class OpenSetDetectorWithExamples(nn.Module):
             # (Nxclasses) x emb x S x S
             if bs < 1:
                 logger.info(f"DEBUGGING: (bs * num_active_classes, -1, self.roialign_size, self.roialign_size) \n ({bs} * {num_active_classes}, -1, {self.roialign_size}, {self.roialign_size})")
+                logger.info(f"\nROI features: {roi_features.shape} \nSpatial size: {spatial_size}")
             inter_dist_emb = other_classes.reshape(bs * num_active_classes, -1, self.roialign_size, self.roialign_size)
 
             intra_feats = torch.gather(feats, 2, class_indices[:, None, :].repeat(1, spatial_size, 1)) if sample_class_enabled else feats
