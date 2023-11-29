@@ -9,6 +9,8 @@ from typing import Dict, List, Optional
 import torch
 from torch.nn.parallel import DataParallel, DistributedDataParallel
 
+import wandb
+
 import detectron2.utils.comm as comm
 from detectron2.utils.events import EventStorage, get_event_storage
 from detectron2.utils.logger import _log_api_usage
@@ -212,7 +214,7 @@ class TrainerBase:
             else:
                 logger.warning(f"Cannot find the hook '{key}', its state_dict is ignored.")
 
-
+logger = logging.getLogger(__name__)
 class SimpleTrainer(TrainerBase):
     """
     A simple trainer for the most common type of task:
@@ -255,6 +257,16 @@ class SimpleTrainer(TrainerBase):
         self._data_loader_iter = iter(data_loader)
         self.optimizer = optimizer
 
+    def get_gradients(self):
+        """
+        Collects the gradients of all model parameters after backpropagation.
+        """
+        gradients = {}
+        for name, parameter in self.model.named_parameters():
+            if parameter.grad is not None:
+                gradients[name] = parameter.grad.clone()
+        return gradients
+
     def run_step(self):
         """
         Implement the standard training logic described above.
@@ -283,6 +295,9 @@ class SimpleTrainer(TrainerBase):
         """
         self.optimizer.zero_grad()
         losses.backward()
+
+        # gradients = self.get_gradients()
+        # logger.info(f"Gradients for modules at iter {self.iter}: {[k for k in gradients.keys()]}")
 
         self._write_metrics(loss_dict, data_time)
 
@@ -334,6 +349,10 @@ class SimpleTrainer(TrainerBase):
             storage.put_scalar("{}total_loss".format(prefix), total_losses_reduced)
             if len(metrics_dict) > 1:
                 storage.put_scalars(**metrics_dict)
+
+            # Log metrics to wandb
+            wandb_metrics = {f"{prefix}{k}": v for k, v in metrics_dict.items()}
+            wandb.log(wandb_metrics)
 
     def state_dict(self):
         ret = super().state_dict()

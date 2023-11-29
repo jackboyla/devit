@@ -27,6 +27,10 @@ import detectron2.utils.comm as comm
 from detectron2.checkpoint import DetectionCheckpointer
 from detectron2.config import get_cfg
 from detectron2.data import MetadataCatalog
+from detectron2.data import (
+    build_detection_test_loader,
+    build_detection_train_loader,
+)
 from detectron2.engine import DefaultTrainer, default_argument_parser, default_setup, hooks, launch
 from detectron2.evaluation import (
     CityscapesInstanceEvaluator,
@@ -64,6 +68,9 @@ from sklearn.metrics import precision_recall_curve
 from sklearn import metrics as sk_metrics
 
 logger = logging.getLogger(__name__)
+
+import wandb
+wandb.init(project='devit', entity='jack-b')
 
 class Trainer(DefaultTrainer):
     """
@@ -172,6 +179,18 @@ class Trainer(DefaultTrainer):
                 param.requires_grad = True
                 
         return model
+
+
+    @classmethod
+    def build_test_loader(cls, cfg, dataset_name):
+        """
+        Returns:
+            iterable
+
+        It now calls :func:`detectron2.data.build_detection_test_loader`.
+        Overwrite it if you'd like a different data loader.
+        """
+        return build_detection_test_loader(cfg, dataset_name, clip_batch_size=cfg.SOLVER.IMS_PER_EVAL_BATCH)
 
 
 def setup(args):
