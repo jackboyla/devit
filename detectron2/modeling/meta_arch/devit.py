@@ -967,7 +967,7 @@ class OpenSetDetectorWithExamples(nn.Module):
     def forward(self, batched_inputs: List[Dict[str, torch.Tensor]]):
         bs = len(batched_inputs)
         loss_dict = {}
-        # if not self.training: assert bs == 1
+        if not self.training: assert bs == 1
 
         if self.training:
             class_weights = self.train_class_weight
