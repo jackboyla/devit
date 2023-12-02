@@ -448,6 +448,7 @@ class OpenSetDetectorWithExamples(nn.Module):
         
         # class_prototypes_file
         #  prototypes, class_order_for_inference
+        # edit needed
         if isinstance(class_prototypes_file, str):
             dct = torch.load(class_prototypes_file)
             prototypes = dct['prototypes']
@@ -481,6 +482,7 @@ class OpenSetDetectorWithExamples(nn.Module):
         else:
             raise NotImplementedError()
 
+        # edit needed
         if len(prototypes.shape) == 3:
             class_weights = F.normalize(prototypes.mean(dim=1), dim=-1)
         else:

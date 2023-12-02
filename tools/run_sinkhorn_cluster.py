@@ -119,12 +119,14 @@ def main(inp,
     assert num_classes == labels.max().item() + 1
     print(f'total tokens {len(tokens)}, num classes {num_classes}')
 
-    prototypes = PrototypeLearner(num_classes, num_prototypes, tokens.shape[-1], queue_size,
+    tdataset = torch.cat([tokens, labels[:, None]], dim=1)
+    dloader = DataLoader(tdataset, batch_size=batch_size, shuffle=True)
+
+    print(f"Tokens Shape: {tokens.shape}")
+    prototypes = PrototypeLearner(num_classes, num_prototypes, embed_dim=tokens.shape[-1], queue_size=queue_size,
                                 momentum=momentum, normalize=normalize == 'yes')
     prototypes.to(device)
 
-    tdataset = torch.cat([tokens, labels[:, None]], dim=1)
-    dloader = DataLoader(tdataset, batch_size=batch_size, shuffle=True)
     with tqdm(total=epochs * len(dloader), desc='learning prototypes') as bar:
         for _ in range(epochs):
             for batch in dloader:
@@ -133,6 +135,7 @@ def main(inp,
                 batch_labels = batch[:, -1]
                 prototypes.update(batch_tokens, batch_labels)
                 bar.update()
+
 
     print('self testing prototypes')
     prototypes = prototypes.cpu()

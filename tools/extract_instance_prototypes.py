@@ -158,13 +158,16 @@ def get_dataloader(dname, aug=False, split=0, idx=0):
 # fs_coco_trainval_base
 # fs_coco_trainval_novel_{5, 10, 30}shot
 
-def main(model='vitl14', dataset='fs_coco17_support_novel_30shot', use_bbox='yes',
-            epochs=1, device=0, n_clst=5, split=0, idx=0, out_dir=None):
+def main(model='vitl14', dataset='fs_coco17_support_novel_30shot', use_bbox='yes', three_D_prototypes=False,
+            epochs=1, device=0, n_clst=5, split=0, idx=0, out_dir=None, use_aug=False):
     use_bbox = use_bbox == 'yes'
     dataset_name = dataset
     model_name = model
     model = torch.hub.load('facebookresearch/dinov2', 'dinov2_' + model)
     dataloader = get_dataloader(dataset_name, split=split, idx=idx)
+
+    if three_D_prototypes is True:
+        print("Creating 3D prototypes!")
 
     D = DatasetCatalog.get(dataset_name)
     thing_cats = {b['category_id'] for a in D  for b in a.get('annotations', [])}
@@ -233,7 +236,29 @@ def main(model='vitl14', dataset='fs_coco17_support_novel_30shot', use_bbox='yes
                         if bmask.sum() <= 0.5:
                             dataset['skip'] += 1
                             continue
-                        avg_patch_token = (bmask * patch_tokens).flatten(1).sum(1) / bmask.sum()
+
+                        if three_D_prototypes is True:
+
+                            # Get 2D prototypes
+                            patch_tokens_masked = patch_tokens * bmask
+                            patch_tokens_masked_sum = patch_tokens_masked.sum(0)
+                            non_zero_pos = torch.nonzero(patch_tokens_masked_sum)
+                            left_most_non_zero = non_zero_pos[:, 1].min()
+                            right_most_non_zero = non_zero_pos[:, 1].max()
+                            top_most_non_zero = non_zero_pos[:, 0].min()
+                            bottom_most_non_zero = non_zero_pos[:, 0].max()
+
+                            # The 2D prototype (c, h_1, w_1) h_1 and w_1 are the height and width 
+                            # of the rectangle fitted to the non-zero pixels of the mask
+                            patch_tokens_masked = patch_tokens_masked[:, top_most_non_zero:bottom_most_non_zero+1, left_most_non_zero:right_most_non_zero+1]
+                            avg_patch_token = patch_tokens_masked
+
+                        else:
+
+                            # code that gives the 1D prototype
+                            avg_patch_token = (bmask * patch_tokens).flatten(1).sum(1) / bmask.sum()
+
+
 
                         dataset['avg_patch_tokens'].append(avg_patch_token.cpu())
                         dataset['labels'].append(label.cpu().item())
@@ -243,6 +268,9 @@ def main(model='vitl14', dataset='fs_coco17_support_novel_30shot', use_bbox='yes
                         dataset['image_id'].append(item['image_id'])
                 
                 bar.update()
+    if three_D_prototypes is True:
+        dataset_name += '.3D'
+    
     name = dataset_name + '.' + model_name
 
     if use_aug:
