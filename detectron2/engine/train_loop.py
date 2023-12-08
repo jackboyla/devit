@@ -17,6 +17,7 @@ from detectron2.utils.logger import _log_api_usage
 
 __all__ = ["HookBase", "TrainerBase", "SimpleTrainer", "AMPTrainer"]
 
+logger = logging.getLogger(__name__)
 
 class HookBase:
     """
@@ -234,7 +235,7 @@ class SimpleTrainer(TrainerBase):
     or write your own training loop.
     """
 
-    def __init__(self, model, data_loader, optimizer):
+    def __init__(self, model, data_loader, optimizer, cfg=None):
         """
         Args:
             model: a torch Module. Takes a data from data_loader and returns a
@@ -256,6 +257,8 @@ class SimpleTrainer(TrainerBase):
         self.data_loader = data_loader
         self._data_loader_iter = iter(data_loader)
         self.optimizer = optimizer
+        self.cfg = cfg
+        self.dynamic_weights = self.cfg.SOLVER.DYNAMIC_WEIGHTS
 
     def get_gradients(self):
         """
@@ -266,6 +269,46 @@ class SimpleTrainer(TrainerBase):
             if parameter.grad is not None:
                 gradients[name] = parameter.grad.clone()
         return gradients
+
+    def adjust_total_loss(self, loss_dict):
+
+        # Loss components weights initialization
+        # (('aux_bce_loss', 1.0), ('aux_dice_loss', 1.0), ('rg_l1_loss', 1.0), ('focal_loss', 1.0), ('bbox_loss', 1.0),)
+        weights = {loss_type: value for loss_type, value in self.cfg.SOLVER.LOSS_WEIGHTS}
+
+        total_loss = 0.0
+
+        # # Dynamic weighting (example: increasing weight of a specific loss after a certain iteration)
+        if len(self.dynamic_weights) > 0:
+            for iter, w in self.dynamic_weights:
+                change_iter = int(iter.split("_")[-1])
+                if self.iter >= change_iter:
+                    weights = {loss_type: value for loss_type, value in w}
+                    self.dynamic_weights = self.dynamic_weights[1:]
+                    break
+
+            if self.iter == change_iter:
+                logger.info(f"weights now updated as iter {self.iter} >= {change_iter} to {weights}")
+
+        for key, loss in loss_dict.items():
+            loss_type = key.split("_")
+            if len(loss_type) > 2:  # aux_bce_loss_4
+                loss_type = "_".join(loss_type[:-1])
+            else: # bbox_loss
+                loss_type = "_".join(loss_type)
+            weight = weights[loss_type]
+            total_loss += weight * loss
+
+        if self.cfg.SOLVER.L2_REG:
+            # L2 Regularization
+            lambda_reg = self.cfg.SOLVER.L2_REG_VALUE           # Regularization parameter
+            l2_reg = torch.tensor(0.0, device='cuda')
+            trainable_params = [(name, param) for name, param in self.model.named_parameters() if param.requires_grad==True]
+            for name, param in trainable_params:
+                l2_reg += torch.norm(param)
+            total_loss += lambda_reg * l2_reg
+
+        return total_loss
 
     def run_step(self):
         """
@@ -287,7 +330,8 @@ class SimpleTrainer(TrainerBase):
             losses = loss_dict
             loss_dict = {"total_loss": loss_dict}
         else:
-            losses = sum(loss_dict.values())
+            # losses = sum(loss_dict.values())
+            losses = self.adjust_total_loss(loss_dict)
 
         """
         If you need to accumulate gradients or do something similar, you can

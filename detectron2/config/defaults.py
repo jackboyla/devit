@@ -588,6 +588,13 @@ _C.MODEL.RESNETS.DEFORM_NUM_GROUPS = 1
 # ---------------------------------------------------------------------------- #
 _C.SOLVER = CN()
 
+_C.SOLVER.LOSS_WEIGHTS = (('aux_bce_loss', 1.0), ('aux_dice_loss', 1.0), ('rg_l1_loss', 1.0), ('focal_loss', 1.0), ('bbox_loss', 1.0),)
+_C.SOLVER.DYNAMIC_WEIGHTS = ()
+_C.SOLVER.L2_REG = False
+_C.SOLVER.L2_REG_VALUE = 0.01
+
+
+
 # See detectron2/solver/build.py for LR scheduler options
 _C.SOLVER.LR_SCHEDULER_NAME = "WarmupMultiStepLR"
 

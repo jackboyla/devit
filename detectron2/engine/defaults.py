@@ -383,7 +383,7 @@ class DefaultTrainer(TrainerBase):
 
         model = create_ddp_model(model, broadcast_buffers=False)
         self._trainer = (AMPTrainer if cfg.SOLVER.AMP.ENABLED else SimpleTrainer)(
-            model, data_loader, optimizer
+            model, data_loader, optimizer, cfg,
         )
 
         self.scheduler = self.build_lr_scheduler(cfg, optimizer)
