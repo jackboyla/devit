@@ -4,21 +4,12 @@ dataset="${dataset:-coco}" # coco, lvis
 shot="${shot:-10}"
 split="${split:-1}"
 num_gpus="${num_gpus:-`nvidia-smi -L | wc -l`}"
+export WANDB_API_KEY=""
 
 # Define the timestamp format (e.g., HH-MM-SS--YYYY-MM-DD)
 timestamp=$(date +%Y-%m-%d--%H-%M-%S)
 
 resume=""
-
-
-if [ -z "${output_dir}" ]
-then
-    output_dir="output/train/open-vocabulary/minicoco/vit${vit}${lora}/$timestamp"
-else
-    output_dir=$output_dir
-    echo "Custom output dir provided: ${output_dir}"
-fi
-
 for arg in "$@"
 do
     if [ "$arg" == "--resume" ]; then
@@ -26,11 +17,6 @@ do
         echo "Resume enabled!"
     fi
 done
-
-echo "task=$task, vit=$vit, dataset=$dataset, shot=$shot, split=$split, num_gpus=$num_gpus"
-
-export WANDB_API_KEY="your key here"
-
 
 lora=""
 # Loop through all arguments
@@ -45,13 +31,32 @@ do
 done
 
 
+if [ -z "${output_dir}" ]
+then
+    output_dir="output/train/open-vocabulary/minicoco/vit${vit}${lora}/$timestamp"
+else
+    output_dir=$output_dir
+    echo "Custom output dir provided: ${output_dir}"
+fi
+
+if [ -z "${config_file}" ]
+then
+    config_file="configs/open-vocabulary/minicoco/vit${vit}${lora}.yaml"
+else
+    config_file=$config_file
+    echo "Custom config_file provided: ${config_file}"
+fi
+
+echo "task=$task, vit=$vit, dataset=$dataset, shot=$shot, split=$split, num_gpus=$num_gpus"
+
+
 case $task in
 
     ovd)
     if [[ "$dataset" == "coco" ]]
     then
         python3 tools/train_net.py    --num-gpus $num_gpus $resume  \
-            --config-file configs/open-vocabulary/minicoco/vit${vit}${lora}.yaml \
+            --config-file $config_file \
             MODEL.WEIGHTS  weights/initial/open-vocabulary/vit${vit}+rpn.pth \
             DE.OFFLINE_RPN_CONFIG configs/RPN/mask_rcnn_R_50_C4_1x_ovd_FSD.yaml \
             OUTPUT_DIR $output_dir
