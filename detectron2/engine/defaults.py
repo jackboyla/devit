@@ -71,7 +71,10 @@ def create_ddp_model(model, *, fp16_compression=False, **kwargs):
         return model
     if "device_ids" not in kwargs:
         kwargs["device_ids"] = [comm.get_local_rank()]
-    ddp = DistributedDataParallel(model, **kwargs)
+    ddp = DistributedDataParallel(
+        model,
+        # find_unused_parameters=True, 
+        **kwargs)
     if fp16_compression:
         from torch.distributed.algorithms.ddp_comm_hooks import default as comm_hooks
 
@@ -380,7 +383,7 @@ class DefaultTrainer(TrainerBase):
 
         model = create_ddp_model(model, broadcast_buffers=False)
         self._trainer = (AMPTrainer if cfg.SOLVER.AMP.ENABLED else SimpleTrainer)(
-            model, data_loader, optimizer
+            model, data_loader, optimizer, cfg,
         )
 
         self.scheduler = self.build_lr_scheduler(cfg, optimizer)

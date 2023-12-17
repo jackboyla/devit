@@ -27,6 +27,10 @@ import detectron2.utils.comm as comm
 from detectron2.checkpoint import DetectionCheckpointer
 from detectron2.config import get_cfg
 from detectron2.data import MetadataCatalog
+from detectron2.data import (
+    build_detection_test_loader,
+    build_detection_train_loader,
+)
 from detectron2.engine import DefaultTrainer, default_argument_parser, default_setup, hooks, launch
 from detectron2.evaluation import (
     CityscapesInstanceEvaluator,
@@ -55,6 +59,7 @@ from collections import defaultdict
 
 import numpy as np
 
+from detectron2.modeling import build_model
 from detectron2.evaluation.evaluator import DatasetEvaluator
 from detectron2.data.datasets.coco_zeroshot_categories import COCO_SEEN_CLS, \
     COCO_UNSEEN_CLS, COCO_OVD_ALL_CLS
@@ -62,7 +67,10 @@ from detectron2.data.datasets.coco_zeroshot_categories import COCO_SEEN_CLS, \
 from sklearn.metrics import precision_recall_curve
 from sklearn import metrics as sk_metrics
 
+logger = logging.getLogger(__name__)
 
+import wandb
+wandb.init(project='devit', entity='jack-b')
 
 class Trainer(DefaultTrainer):
     """
@@ -151,6 +159,26 @@ class Trainer(DefaultTrainer):
         res = cls.test(cfg, model, evaluators)
         res = OrderedDict({k + "_TTA": v for k, v in res.items()})
         return res
+    
+    
+    @classmethod
+    def build_model(cls, cfg):
+        """
+        Returns:
+            torch.nn.Module:
+
+        It now calls :func:`detectron2.modeling.build_model`.
+        Overwrite it if you'd like a different model.
+        """
+        model = build_model(cfg)
+        logger = logging.getLogger(__name__)
+
+        # unfreeze ALL LoRA parameters
+        for name, param in model.named_parameters():
+            if 'lora' in name:
+                param.requires_grad = True
+                
+        return model
 
 
 def setup(args):
@@ -170,6 +198,7 @@ def setup(args):
 def main(args):
     cfg = setup(args)
 
+    # EVALUATION
     if args.eval_only:
         model = Trainer.build_model(cfg)
         DetectionCheckpointer(model, save_dir=cfg.OUTPUT_DIR).resume_or_load(
@@ -182,17 +211,20 @@ def main(args):
             verify_results(cfg, res)
         return res
 
-    """
-    If you'd like to do anything fancier than the standard training logic,
-    consider writing your own training loop (see plain_train_net.py) or
-    subclassing the trainer.
-    """
+    # TRAINING
     trainer = Trainer(cfg)
     trainer.resume_or_load(resume=args.resume)
     if cfg.TEST.AUG.ENABLED:
         trainer.register_hooks(
             [hooks.EvalHook(0, lambda: trainer.test_with_TTA(cfg, trainer.model))]
         )
+
+    if args.num_gpus < 2:
+        backbone_trainable_params = [name for name, param in trainer.model.backbone.named_parameters() if param.requires_grad==True]
+    else:
+        backbone_trainable_params = [name for name, param in trainer.model.module.backbone.named_parameters() if param.requires_grad==True]
+    logger.info(f"Number of trainable BACKBONE params: \n{len(backbone_trainable_params)}")
+
     return trainer.train()
 
 
